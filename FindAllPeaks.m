@@ -1,4 +1,5 @@
-function [procMSNA, bandMSNA, pks, locs] = FindAllPeaks(rawMSNA, t, fs, rr)
+function [procMSNA, bandMSNA, pks, locs] = ...
+	FindAllPeaks(rawMSNA, t, fs, rr, latency)
 %
 % 	OVERVIEW
 % 		Load raw MSNA data, time series, and sampling frequency
@@ -161,7 +162,8 @@ plot(t, bandMSNA, ...
 %% Option: bandpass filtered data
 % Need to use a vector that accounts for latency from RR beat
 % Centered around 1.25 s (Hamner and Taylor 2001)
-latency = 1.25;
+% *latency* variable is user-defined for each run of this script
+
 maxerr = 0.500;
 lower_bounds = rr + latency - maxerr;
 upper_bounds = rr + latency + maxerr;

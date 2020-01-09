@@ -108,8 +108,10 @@ fileName = 'NVX_CKD_018_073117';
 [rr] = HeartRateAnalysis(fileName, ecg, bp, t, fs);
 
 % Peak analysis
+% Define latency in seconds
+latency = 1.25
 [procMSNA, bandMSNA, pks, locs] = ...
-	FindAllPeaks(rawMSNA, t, fs, rr); 
+	FindAllPeaks(rawMSNA, t, fs, rr, latency); 
 
 % Calculate summary data
 x = length(t)/fs/60;
