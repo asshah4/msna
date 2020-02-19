@@ -47,37 +47,22 @@ numsub = length(patients);
 % Sampling frequency
 fs = 1000;
 
-%% Limit peaks to match for heart rate
-
-% Plot corrected peaks
-plot(t, bandMSNA, locs, pks, 'o')
-xlim([0 t(end)]), ylim([-50, 50])
-legend('Signal', 'ECG-limited peaks')
-
-% Name of patient
-fprintf(['Name: %s\n'], fileName)
-
-% Number of bursts over entire time series
-x = length(t)/fs/60;
-y = length(locs)/x;
-fprintf(['Bandpassed burst rate (burst/minute) \n= %d bursts/minute, ' ...
-	'\ntotal time is %d minutes\n'], round(y), round(x))
-
-% Bursts incidence = bursts / 100 beats
-x = length(locs)/length(rr)*100;
-fprintf(['Bandpassed burst incidence (bursts/100beats) \n= %d bursts/100beats, ' ...
-	'\ntotal beats is %d, average HR = %d\n'], ...
-	round(x), length(rr), round(60/mean(diff(rr))))
 
 %% Write this into file for each patient
 
-for i = 1:numsub
+% move into raw_data folder
+cd(raw_folder);
+
+parfor i = 1:numsub
 	names(i) = patients(i); % name of patient being analyzed
 	[timestamp, rawMSNA, ecg, bp, t, N] = ...
 		ExtractRawSignal(names{i}, fs); % Extract raw data
 	[rr] = HeartRateAnalysis(names{i}, ecg, bp, t, fs); % RR ints
+	
+	% Temporary latency value
+	latency = 1.3;
 	[procMSNA, bandMSNA, pks, locs] = ...
-		FindAllPeaks(rawMSNA, t, fs, rr); % Peak analysis
+		FindAllPeaks(rawMSNA, t, fs, rr, latency); % Peak analysis
 	
 	% Calculate summary data
 	x = length(t)/fs/60;
@@ -94,11 +79,11 @@ patid = names';
 freq = freq';
 incidence = incidence';
 T = table(patid, freq, incidence);
-writetable(T, [pwd filesep 'burst_algorithm.csv']);
+writetable(T, [pwd filesep 'matlab_burst_algorithm.csv']);
 
 %% Troubleshooting
 
-fileName = 'NVX_CKD_018_073117';
+fileName = 'NVX_CKD_020_010918EOS';
 
 % Extract raw data
 [timestamp, rawMSNA, ecg, bp, t, N] = ...
@@ -109,9 +94,17 @@ fileName = 'NVX_CKD_018_073117';
 
 % Peak analysis
 % Define latency in seconds
-latency = 1.25
+latency = 1.3;
 [procMSNA, bandMSNA, pks, locs] = ...
 	FindAllPeaks(rawMSNA, t, fs, rr, latency); 
+
+
+% Visualize the plot, amplify the ECG for visualization
+plot(t, bandMSNA, ...
+	locs, pks, 'o', ...
+	t, ecg*-100)
+ylim([-100 100]);
+
 
 % Calculate summary data
 x = length(t)/fs/60;

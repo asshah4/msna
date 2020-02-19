@@ -117,15 +117,9 @@ bandMSNA = bandpass(rawMSNA, [0.5 4], fs);
 movingBaseline = movmean(bandMSNA, fs*3);
 movingThreshold = movstd(bandMSNA, fs*3);
 interval = min(diff(rr));
-baseline = mean(bandMSNA);
+baseline = median(bandMSNA);
 noiseLevel = iqr(bandMSNA);
 threshold = baseline + noiseLevel;
-
-% Find baseline signal voltage during non-bursting segment (NBS)
-baseline = median(scaleMSNA);
-
-% Noise...use IQR/2 of NBS (arbitrary choice)
-noiseLevel = iqr(scaleMSNA)/2;
 
 % Threshold for finding peaks 
 % literature 3:1 ratio for signal to no
@@ -133,7 +127,7 @@ noiseLevel = iqr(scaleMSNA)/2;
 % Locate peaks
 [pks locs] = findpeaks(bandMSNA, t, ...
 	'MinPeakDistance', interval, ...
-	'MinPeakHeight', threshold/2 ...
+	'MinPeakHeight', threshold ...
 	);
 
 
@@ -142,6 +136,7 @@ y = movingThreshold(x)';
 locs = locs(pks >= y(:));
 pks = pks(pks >= y(:));
 
+%% Valleys and surrounding Minima (not currently being incorporated)
 % Find surrounding minima
 [vals spots] = findpeaks(bandMSNA.*-1, t, ...
 	'MinPeakDistance', 0.25 ...
@@ -155,16 +150,13 @@ x = any(spots >= spots_left(:) & spots <= spots_right(:));
 spots = spots(x);
 vals = vals(x);
 
-% Visualize the plot PRN
-plot(t, bandMSNA, ...
-	locs, pks, 'o')
 
 %% Option: bandpass filtered data
 % Need to use a vector that accounts for latency from RR beat
 % Centered around 1.25 s (Hamner and Taylor 2001)
 % *latency* variable is user-defined for each run of this script
 
-maxerr = 0.500;
+maxerr = 0.250;
 lower_bounds = rr + latency - maxerr;
 upper_bounds = rr + latency + maxerr;
 
